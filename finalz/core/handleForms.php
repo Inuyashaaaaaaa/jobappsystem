@@ -79,6 +79,7 @@ function postJob($title, $description, $hr_id) {
 
 
 
+// Send a message in a conversation
 function sendMessage($sender_id, $receiver_id, $message) {
     global $db;
 
@@ -89,6 +90,7 @@ function sendMessage($sender_id, $receiver_id, $message) {
     $stmt->bindParam(':message', $message);
     $stmt->execute();
 }
+
 
 function getApplicants() {
     global $db;
