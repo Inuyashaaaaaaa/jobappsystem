@@ -96,50 +96,54 @@ if (isset($_POST['logout'])) {
 
                     <!-- Edit and Delete Buttons -->
                     <form method="POST" class="d-inline">
-    <input type="hidden" name="job_id" value="<?= $job['id']; ?>">
-    <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal<?= $job['id']; ?>">Edit</button>
-</form>
+                        <input type="hidden" name="job_id" value="<?= $job['id']; ?>">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editModal<?= $job['id']; ?>">Edit</button>
+                    </form>
 
-<form method="POST" class="d-inline" onsubmit="return confirmDelete();">
-    <input type="hidden" name="job_id" value="<?= $job['id']; ?>">
-    <button type="submit" name="delete_job" class="btn btn-danger btn-sm">Delete</button>
-</form>
+                    <form method="POST" class="d-inline" onsubmit="return confirmDelete();">
+                        <input type="hidden" name="job_id" value="<?= $job['id']; ?>">
+                        <button type="submit" name="delete_job" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
 
                     <!-- Applications Section -->
                     <h6>Applications for this Job:</h6>
-                            <?php
-                            // Fetch applications for the current job post
-                            $applications = getApplications($job['id']);
-                            if ($applications): ?>
-                                <ul>
-                                    <?php foreach ($applications as $application): ?>
-                                        <li>
-                                            <strong><?= htmlspecialchars($application['applicant_name']); ?></strong> - 
-                                            Status: 
-                                            <?php
-                                            if ($application['status'] == 1) {
-                                                echo 'Hired';
-                                            } elseif ($application['status'] == 2) {
-                                                echo 'Rejected';
-                                            } else {
-                                                echo 'Applied';
-                                            }
-                                            ?>
+                    <?php
+// Fetch applications for the current job post
+$applications = getApplications($job['id']);
+if ($applications): ?>
+    <ul>
+        <?php foreach ($applications as $application): ?>
+            <li>
+                <strong><?= htmlspecialchars($application['applicant_name']); ?></strong> - 
+                Status: 
+                <?php
+                if ($application['status'] == 1) {
+                    echo 'Hired';
+                } elseif ($application['status'] == 2) {
+                    echo 'Rejected';
+                } else {
+                    echo 'Applied';
+                }
+                ?>
 
-                                            <?php if ($application['status'] == 0): ?>
-                                                <!-- Only allow accepting or rejecting applications that are still 'applied' (status = 0) -->
-                                                <form method="POST" class="mt-2">
-                                                    <input type="hidden" name="application_id" value="<?= $application['id']; ?>">
-                                                    <button type="submit" name="accept" class="btn btn-success btn-sm">Accept Application</button>
-                                                    <button type="submit" name="reject" class="btn btn-danger btn-sm">Reject Application</button>
-                                                </form>
-                                            <?php endif; ?>
-                                        </li>
-                                    <?php endforeach; ?>
-                                </ul>
-                    <?php else: ?>
-                        <p>No applications yet.</p>
-                    <?php endif; ?>
+    
+                <a href="<?= htmlspecialchars($application['resume_path']); ?>" class="btn btn-info btn-sm" download>Download Resume</a>
+
+                <?php if ($application['status'] == 0): ?>
+                    <!-- Only allow accepting or rejecting applications that are still 'applied' (status = 0) -->
+                    <form method="POST" class="mt-2">
+                        <input type="hidden" name="application_id" value="<?= $application['id']; ?>">
+                        <button type="submit" name="accept" class="btn btn-success btn-sm">Accept Application</button>
+                        <button type="submit" name="reject" class="btn btn-danger btn-sm">Reject Application</button>
+                    </form>
+                <?php endif; ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
+<?php else: ?>
+    <p>No applications yet.</p>
+<?php endif; ?>
+
                 </div>
             </div>
 
