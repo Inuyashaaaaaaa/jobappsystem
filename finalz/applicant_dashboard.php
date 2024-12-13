@@ -15,24 +15,36 @@ $job_posts = getJobPosts();  // Get all open job posts
 // Handle job application
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['apply'])) {
     $job_id = $_POST['job_id'];
-    applyForJob($user_id, $job_id);  // Function to apply for the selected job
-    echo "<script>alert('Application submitted successfully!');</script>";
-}
 
-// Delete job post
-if (isset($_GET['delete'])) {
-    $job_id = intval($_GET['delete']);
+    // Check if a file was uploaded
+    if (isset($_FILES['resume']) && $_FILES['resume']['error'] === UPLOAD_ERR_OK) {
+        $file_tmp = $_FILES['resume']['tmp_name'];
+        $file_name = $_FILES['resume']['name'];
+        $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
 
-    try {
-        deleteJobPost($job_id);
-        echo "<script>alert('Job post deleted successfully!');</script>";
-    } catch (Exception $e) {
-        echo "<script>alert('Failed to delete job post: " . $e->getMessage() . "');</script>";
+        // Validate file extension
+        if ($file_ext !== 'pdf') {
+            echo "<script>alert('Only PDF files are allowed for resumes.');</script>";
+        } else {
+            // Create a unique name and save the file
+            $upload_dir = 'uploads/resumes/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);  // Ensure the directory exists
+            }
+            $new_file_name = uniqid() . '-' . basename($file_name);
+            $file_path = $upload_dir . $new_file_name;
+
+            if (move_uploaded_file($file_tmp, $file_path)) {
+                // Apply for the job and save the resume path
+                applyForJob($user_id, $job_id, $file_path);
+                echo "<script>alert('Application submitted successfully!');</script>";
+            } else {
+                echo "<script>alert('Error uploading the file. Please try again.');</script>";
+            }
+        }
+    } else {
+        echo "<script>alert('Please upload a resume (PDF file) to apply for a job.');</script>";
     }
-
-    // Redirect to avoid duplicate delete requests on refresh
-    header('Location: hr_dashboard.php');
-    exit();
 }
 
 // Handle logout
@@ -52,15 +64,6 @@ if (isset($_POST['logout'])) {
     <title>Available Jobs</title>
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script>
-        // JavaScript function to confirm deletion
-        function confirmDelete(jobId) {
-            if (confirm("Are you sure you want to delete this job post? This action cannot be undone.")) {
-                // Redirect to the same page with a delete request
-                window.location.href = `?delete=${jobId}`;
-            }
-        }
-    </script>
 </head>
 <body>
 
@@ -70,16 +73,21 @@ if (isset($_POST['logout'])) {
 
     <h3 class="mt-4">Available Job Posts</h3>
     <?php if ($job_posts): ?>
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <h4>Select a job to apply for:</h4>
             <select name="job_id" class="form-select mb-3" required>
                 <?php foreach ($job_posts as $job): ?>
                     <option value="<?= $job['id']; ?>"><?= htmlspecialchars($job['title']); ?></option>
                 <?php endforeach; ?>
             </select>
+            
+            <h4>Upload your resume (PDF):</h4>
+            <div class="mb-3">
+                <input type="file" name="resume" class="form-control" accept=".pdf" required>
+            </div>
+            
             <button type="submit" name="apply" class="btn btn-primary">Apply for Job</button>
         </form>
-        
     <?php else: ?>
         <p>No open job posts available at the moment.</p>
     <?php endif; ?>
